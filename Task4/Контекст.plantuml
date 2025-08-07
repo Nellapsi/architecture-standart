@@ -1,0 +1,35 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+' Установка стиля C4
+skinparam linetype ortho
+
+' Определение персон
+Person(client, "Клиент", "Физическое лицо старшего возраста")
+Person(operator_main, "Сотрудник кол-центра", "Оператор основного (внутреннего) кол-центра")
+Person(operator_partner, "Сотрудник партнёрского кол-центра", "Оператор внешнего кол-центра")
+Person(backoffice, "Сотрудник бэк-офиса", "Специалист по депозитам")
+
+' Определение систем
+System_Boundary(bank_boundary, "Банк Стандарт") {
+    System(bank, "Банк Стандарт", "Отображение депозитов")
+}
+
+System_Ext(partner_call_center, "Партнёрский кол-центр", "Внешняя система кол-центра")
+System_Ext(telecom, "Телеком-оператор", "SMS Gateway")
+System_Ext(call_center_system, "Система кол-центра", "Платформа подрядчика")
+
+
+' Связи между элементами
+Rel(client, bank, "Просмотр депозитов, открытие депозитов онлайн, звонки для консультации")
+Rel(client, partner_call_center, "Звонки для консультации")
+Rel(client, call_center_system, "Звонки для консультации")
+Rel(operator_main, call_center_system, "Работа с клиентами")
+Rel(operator_partner, partner_call_center, "Работа с клиентами")
+Rel(backoffice, bank, "Управление ставками")
+Rel(bank, partner_call_center, "Передача ставок через SFTP")
+Rel(bank, call_center_system, "Передача ставок через SFTP")
+
+Rel(bank, telecom, "Отправка СМС")
+
+@enduml

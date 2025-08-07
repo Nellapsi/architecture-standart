@@ -1,0 +1,76 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+skinparam linetype ortho
+
+
+' Внешние системы
+Person(client, "Клиент", "Физическое лицо старшего возраста")
+Person(operator_main, "Сотрудник кол-центра", "Оператор основного кол-центра")
+Person(operator_partner, "Сотрудник партнёрского кол-центра", "Оператор внешнего кол-центра")
+
+' Контейнеры банка
+Container_Boundary(bank_container, "Банк Стандарт") {
+    
+
+        Container(website_app, "Сайт", "PHP/React.js", "Отображение списка депозитов")
+        Container(internet_bank_app, "Интернет-банк", "ASP.NET MVC 4.5", "Персонализированные ставки и операции")
+    
+    
+
+        Container(api_gateway, "API Gateway", "Nginx/Kong", "Маршрутизация запросов")
+        Container(deposit_service, "Сервис депозитов", "Java/.NET", "Бизнес-логика депозитов")
+        Container(rates_service, "Сервис ставок", "Java", "Управление и экспорт ставок")
+        Container(integration_service, "Сервис интеграции", "Java/.NET", "Интеграция с внешними системами")
+    
+    
+
+        Container(abs_database, "АБС Database", "Oracle 12c", "Хранение ставок и операций")
+        Container(ms_sql_database, "MS SQL Database", "MS SQL Server", "Данные интернет-банка")
+
+    
+
+        Container(message_broker, "Message Broker", "Apache Kafka", "Асинхронная коммуникация")
+        Container(sftp_server, "SFTP Server", "OpenSSH", "Безопасная передача файлов")
+    
+}
+
+' Внешние контейнеры
+Container_Ext(call_center_external, "Система кол-центра", "Платформа подрядчика", "Обработка звонков клиентов")
+Container_Ext(partner_call_center_external, "Партнёрский кол-центр", "Внешняя система", "Обработка звонков через SFTP")
+
+
+
+Rel(client, website_app, "Просмотр депозитов, открытие депозитов онлайн")
+Rel(client, internet_bank_app, "Просмотр депозитов, открытие депозитов онлайн")
+
+Rel(website_app, api_gateway, "HTTP/HTTPS")
+Rel(internet_bank_app, api_gateway, "HTTP/HTTPS")
+
+
+Rel(api_gateway, deposit_service, "Маршрутизация")
+Rel(deposit_service, abs_database, "JDBC/ODP.NET")
+Rel(deposit_service, ms_sql_database, "Entity Framework")
+Rel(deposit_service, rates_service, "Получение ставок")
+
+' Служба ставок
+Rel(rates_service, abs_database, "Чтение ставок")
+Rel(rates_service, message_broker, "Передача ставок")
+Rel(integration_service, sftp_server, "Экспорт CSV файлов")
+
+' Интеграционные службы
+Rel(integration_service, abs_database, "Вызов PL-SQL")
+Rel(integration_service, message_broker, "Отправка сообщений")
+
+' Асинхронная коммуникация
+Rel(deposit_service, message_broker, "Отправка событий")
+Rel(message_broker, integration_service, "Получение событий")
+
+' Внешние связи
+Rel(operator_main, call_center_external, "Работа с системой")
+Rel(call_center_external, sftp_server, "Получение ставок через API")
+Rel(partner_call_center_external, operator_partner, "Работа с системой")
+Rel(partner_call_center_external, sftp_server, "Получение файлов")
+
+
+@enduml

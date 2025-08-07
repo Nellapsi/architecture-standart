@@ -1,0 +1,49 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+' Установка стиля C4
+ skinparam linetype ortho
+
+' Контейнеры
+
+Person(client, "Клиент", "Физическое лицо")
+Container_Boundary(container1, "Внешние системы") {
+
+    System_Ext(abs, "АБС", "Oracle Database с PL-SQL", $tags="external_system")
+    System_Ext(sms_gateway, "СМС-шлюз", "Телеком-оператор", $tags="external_system")
+    System_Ext(call_center, "Система кол-центра", "Платформа подрядчика", $tags="external_system")
+}
+
+Container_Boundary(container2, "Система открытия депозитов") {
+    Component(website, "Сайт", "PHP/React.js", "Отображение депозитов и прием заявок", $tags="web_component")
+    Component(internet_bank, "Интернет-банк", "ASP.NET MVC 4.5", "Персонализированные ставки и заявки", $tags="web_component")
+    Component(api_gateway, "API Gateway", "Nginx/Kong", "Маршрутизация и балансировка", $tags="service_component")
+    Component(web_service_applications, "Веб-сервис заявок", "Java Spring Boot", "Обработка заявок с сайта", $tags="service_component")
+    Component(web_service_deposits, "Веб-сервис депозитов", ".NET Core", "Обработка заявок из интернет-банка", $tags="service_component")
+    Component(message_broker, "Message Broker", "Apache Kafka", "Асинхронная коммуникация", $tags="integration_component")
+    Component(abs_integration, "Сервис интеграции с АБС", "Java/.NET", "Интерфейс к АБС", $tags="integration_component")
+
+}
+
+' Связи между внешними системами и компонентами
+Rel(client, website, "Просмотр депозитов и подача заявки")
+Rel(client, internet_bank, "Просмотр ставок и подача заявки")
+Rel(abs_integration, abs, "Вызов PL-SQL процедур")
+Rel(abs_integration, sms_gateway, "Отправка СМС")
+Rel(abs_integration, call_center, "Передача данных")
+
+' Связи между веб-компонентами и API Gateways
+Rel(website, api_gateway, "HTTP запросы")
+Rel(internet_bank, api_gateway, "HTTP запросы")
+
+' Связи между API Gateways и сервисами
+Rel(api_gateway, web_service_applications, "Маршрутизация")
+Rel(api_gateway, web_service_deposits, "Маршрутизация")
+
+' Асинхронные связи через Message Broker
+Rel(web_service_applications, message_broker, "Отправка сообщений")
+Rel(web_service_deposits, message_broker, "Отправка сообщений")
+Rel(message_broker, abs_integration, "Получение сообщений")
+
+
+@enduml
